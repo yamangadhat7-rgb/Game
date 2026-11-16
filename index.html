@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>هجولة سيتي 3D — Pro Edition</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#05070c;font-family:'Segoe UI',Tahoma,sans-serif;color:#e8f0ff;user-select:none}
+canvas{display:block;position:fixed;inset:0}
+.hidden{display:none!important}
+
+#menu{position:fixed;inset:0;overflow-y:auto;z-index:20;padding:14px;
+  background:radial-gradient(circle at 50% 0%,rgba(30,20,60,.86),rgba(5,7,12,.96) 60%);
+  backdrop-filter:blur(8px)}
+.menuInner{max-width:600px;margin:0 auto;padding-bottom:50px}
+#menu h1{font-size:28px;text-align:center;margin:6px 0 2px;font-weight:900;letter-spacing:1px;
+  background:linear-gradient(90deg,#00e5ff,#ff2d95,#ffd700);-webkit-background-clip:text;background-clip:text;color:transparent}
+#menu .sub{text-align:center;color:#7d90b0;font-size:12px;margin-bottom:8px}
+#preview{width:100%;height:180px;display:block;border-radius:16px;
+  background:radial-gradient(circle at 50% 70%,rgba(0,229,255,.10),transparent 60%);margin-bottom:6px}
+#menu h3{font-size:14px;color:#8fa6c8;margin:14px 0 7px;border-right:3px solid #00e5ff;padding-right:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input{flex:1;min-width:110px;padding:11px;border-radius:10px;border:1px solid #22304a;background:#0d1524;color:#e8f0ff;font-size:14px;outline:none;font-family:inherit}
+input:focus{border-color:#00e5ff}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:10px;font-weight:700;transition:.15s}
+button:active{transform:scale(.97)}
+.primary{padding:13px 20px;background:linear-gradient(135deg,#00c8ff,#0066ff);color:#fff;font-size:15px;flex:1;box-shadow:0 6px 22px rgba(0,140,255,.35)}
+.primary:hover{filter:brightness(1.15)}
+.ghost{padding:12px 18px;background:#16203a;color:#cfe0ff;font-size:14px;flex:1;border:1px solid #22304a}
+.ghost:hover{background:#1e2c4d}
+
+#cars,#maps{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px}
+.card{background:#0e1626;border:2px solid #1b2740;border-radius:12px;padding:9px;text-align:right;color:#cfe0ff;display:flex;flex-direction:column;gap:3px}
+.card b{font-size:12.5px;color:#fff}
+.card span{font-size:10.5px;color:#6e83a6}
+.card.sel{border-color:#00e5ff;background:#0f2233;box-shadow:0 0 16px rgba(0,229,255,.35)}
+.card .dot{width:100%;height:6px;border-radius:3px;margin-bottom:3px}
+
+#skins{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:6px;max-height:150px;overflow-y:auto;padding:3px}
+.skin{height:46px;border-radius:10px;border:2px solid #1b2740;position:relative;overflow:hidden}
+.skin.sel{border-color:#ffd700;box-shadow:0 0 14px rgba(255,215,0,.5)}
+.skin i{position:absolute;bottom:1px;right:3px;font-size:8.5px;font-style:normal;color:#fff;text-shadow:0 1px 3px #000}
+
+.modeRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modeBtn{padding:14px;background:#0e1626;border:2px solid #1b2740;border-radius:12px;color:#cfe0ff;font-size:14px}
+.modeBtn.sel{border-color:#ffd700;background:#1a1520;color:#ffd700;box-shadow:0 0 18px rgba(255,215,0,.25)}
+
+#status{min-height:20px;margin-top:10px;font-size:12.5px;color:#00e5ff;text-align:center}
+#status.err{color:#ff5577}
+
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+#speedo{position:absolute;bottom:20px;left:20px;background:rgba(8,14,26,.55);border:1px solid rgba(0,229,255,.25);
+  border-radius:16px;padding:6px 20px;text-align:center;backdrop-filter:blur(8px)}
+#speedo span{font-size:34px;font-weight:900;color:#00e5ff;line-height:1;text-shadow:0 0 18px rgba(0,229,255,.6)}
+#speedo small{display:block;font-size:10px;color:#6e83a6;letter-spacing:1px}
+
+#raceBox{position:absolute;top:18px;left:18px;background:rgba(8,14,26,.65);border:1px solid rgba(255,215,0,.35);
+  border-radius:14px;padding:8px 16px;color:#ffd700;font-size:13px;text-align:center;display:none;backdrop-filter:blur(8px)}
+#raceBox b{color:#fff;font-size:18px;display:block;line-height:1.1}
+#raceBox small{color:#8fa6c8;font-size:10px}
+
+#driftBox{position:absolute;top:18px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(8,14,26,.5);
+  border:1px solid rgba(255,45,149,.3);border-radius:16px;padding:6px 22px;backdrop-filter:blur(8px);transition:.2s}
+#driftBox span{font-size:26px;font-weight:900;color:#ffd700;line-height:1}
+#driftBox small{display:block;font-size:10px;color:#8fa6c8;letter-spacing:1px}
+#driftBox.active{background:rgba(60,8,35,.65);border-color:#ff2d95;box-shadow:0 0 26px rgba(255,45,149,.55)}
+#driftBox.active span{color:#ff2d95;text-shadow:0 0 18px rgba(255,45,149,.8)}
+
+#nitroWrap{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);width:180px;height:11px;
+  background:rgba(8,14,26,.7);border:1px solid rgba(0,229,255,.3);border-radius:8px;overflow:hidden}
+#nitroBar{height:100%;width:100%;background:linear-gradient(90deg,#00e5ff,#7c4dff);transition:width .08s}
+
+#minimap{position:absolute;bottom:20px;right:20px;width:140px;height:140px;border-radius:14px;
+  border:1px solid rgba(0,229,255,.25);box-shadow:0 0 24px rgba(0,0,0,.6)}
+
+#roomInfo{position:absolute;top:18px;right:18px;background:rgba(8,14,26,.6);border:1px solid rgba(0,229,255,.25);
+  border-radius:14px;padding:9px 16px;font-size:12px;color:#9fb6d6;text-align:center;backdrop-filter:blur(8px)}
+#roomInfo b{color:#00e5ff;font-size:15px;letter-spacing:3px}
+#btnExit{position:absolute;top:18px;right:18px;margin-top:66px;pointer-events:auto;padding:7px 16px;
+  background:rgba(60,12,26,.8);color:#ff7799;border:1px solid #4a1f33;font-size:12px}
+
+#countdown{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:18;
+  pointer-events:none;font-size:120px;font-weight:900;color:#fff;
+  text-shadow:0 0 40px rgba(0,229,255,.9),0 0 80px rgba(255,45,149,.6);display:none}
+#countdown.go{animation:countPop .9s ease-out}
+@keyframes countPop{0%{transform:scale(2.5);opacity:0}30%{transform:scale(1);opacity:1}100%{transform:scale(.6);opacity:0}}
+
+#finishMsg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
+  z-index:19;background:rgba(5,7,12,.85);backdrop-filter:blur(8px);pointer-events:auto;padding:24px;text-align:center}
+#finishMsg h2{font-size:38px;margin-bottom:14px;background:linear-gradient(90deg,#00e5ff,#ffd700);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+#finishMsg p{color:#9fb6d6;font-size:16px;margin-bottom:20px}
+#finishMsg button{padding:14px 40px;font-size:16px;background:linear-gradient(135deg,#00c8ff,#0066ff);color:#fff;border-radius:12px}
+
+#touch{position:fixed;inset:0;z-index:15;pointer-events:none}
+#touch button{position:absolute;pointer-events:auto;width:72px;height:72px;border-radius:50%;
+  background:rgba(20,32,54,.55);color:#9fd8ff;font-size:20px;border:2px solid rgba(39,64,95,.9);backdrop-filter:blur(6px)}
+#touch button:active{background:rgba(0,200,255,.35)}
+#tLeft{left:14px;bottom:104px}#tRight{left:98px;bottom:104px}
+#tUp{right:14px;bottom:184px}#tDown{right:14px;bottom:96px}
+#tHand{right:98px;bottom:140px;font-size:12px!important;color:#ff9fd0!important;border-color:#5f2740!important}
+#tBoost{left:56px;bottom:184px;font-size:11px!important;color:#00e5ff!important;border-color:#1b4a5f!important}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="menu">
+  <div class="menuInner">
+    <h1>هجولة سيتي 3D — Pro</h1>
+    <div class="sub">4 خرائط • 5 أنواع سيارات • 24 سكن • سباق مع بوتات • P2P</div>
+    <canvas id="preview"></canvas>
+
+    <h3>اسمك</h3>
+    <div class="row"><input id="nameIn" maxlength="14" placeholder="اسمك" value="هجّال"/></div>
+
+    <h3>الخريطة</h3>
+    <div id="maps"></div>
+
+    <h3>السيارة</h3>
+    <div id="cars"></div>
+
+    <h3>السكن (24)</h3>
+    <div id="skins"></div>
+
+    <h3>نمط اللعب</h3>
+    <div class="modeRow">
+      <button class="modeBtn sel" id="modeFree">🚗 جولة حرة</button>
+      <button class="modeBtn" id="modeRace">🏁 سباق (3 لفات)</button>
+    </div>
+
+    <h3>ابدأ</h3>
+    <div class="row"><button class="primary" id="btnSolo">انطلق</button></div>
+
+    <h3>مع الأصحاب (P2P)</h3>
+    <div class="row">
+      <button class="ghost" id="btnHost">🏠 استضافة</button>
+      <input id="codeIn" maxlength="4" placeholder="كود" style="text-transform:uppercase;text-align:center;letter-spacing:4px;max-width:90px"/>
+      <button class="ghost" id="btnJoin">🔗 انضمام</button>
+    </div>
+    <div id="status"></div>
+  </div>
+</div>
+
+<div id="hud" class="hidden">
+  <div id="speedo"><span id="spd">0</span><small>كم/س</small></div>
+  <div id="raceBox"><small>اللفة</small><b id="lapTxt">1 / 3</b><small id="posTxt">المركز 1/6</small></div>
+  <div id="driftBox"><span id="score">0</span><small id="combo">هجولة x1.0</small></div>
+  <div id="nitroWrap"><div id="nitroBar"></div></div>
+  <canvas id="minimap" width="280" height="280"></canvas>
+  <div id="roomInfo" class="hidden"></div>
+  <button id="btnExit">خروج</button>
+</div>
+
+<div id="countdown"></div>
+<div id="finishMsg">
+  <h2 id="finishTitle">🏁 انتهى السباق</h2>
+  <p id="finishSub">المركز: 1</p>
+  <button onclick="document.getElementById('finishMsg').style.display='none'">متابعة</button>
+</div>
+
+<div id="touch" class="hidden">
+  <button id="tLeft">◀</button><button id="tRight">▶</button>
+  <button id="tUp">▲</button><button id="tDown">▼</button>
+  <button id="tHand">هاند</button><button id="tBoost">N2O</button>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script type="importmap">
+{"imports":{
+  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ===== أدوات ===== */
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+const lerp=(a,b,t)=>a+(b-a)*t;
+const $=id=>document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function segDist(px,pz,ax,az,bx,bz){
+  const dx=bx-ax, dz=bz-az;
+  const L2=dx*dx+dz*dz;
+  let t=L2>0?((px-ax)*dx+(pz-az)*dz)/L2:0;
+  t=clamp(t,0,1);
+  return Math.hypot(px-(ax+dx*t), pz-(az+dz*t));
+}
+function distToTrack(x,z,wp){
+  let m=1e9;
+  for(let i=0;i<wp.length;i++){
+    const a=wp[i], b=wp[(i+1)%wp.length];
+    const d=segDist(x,z,a[0],a[1],b[0],b[1]);
+    if(d<m) m=d;
+  }
+  return m;
+}
+
+/* ===== السيارات ===== */
+// style: 0=sedan 1=coupe 2=muscle 3=supercar 4=truck
+const CARS=[
+ {name:'هجولة كلاسيك', hex:0xe8443a, accel:23, max:52, grip:0.862, drift:0.982, turn:2.40, style:0},
+ {name:'نيسان سيلفي',  hex:0x00b3ff, accel:22, max:53, grip:0.852, drift:0.984, turn:2.60, style:0},
+ {name:'تويوتا سوبرا', hex:0xff8c00, accel:25, max:58, grip:0.866, drift:0.978, turn:2.30, style:1},
+ {name:'فورد موستانج', hex:0xffd700, accel:27, max:55, grip:0.842, drift:0.976, turn:2.20, style:2},
+ {name:'نيسان GT-R',   hex:0x8a2be2, accel:26, max:60, grip:0.886, drift:0.974, turn:2.35, style:3},
+ {name:'مازدا RX-7',   hex:0x39ff14, accel:24, max:54, grip:0.832, drift:0.988, turn:2.80, style:1},
+ {name:'لامبورغيني',   hex:0xff2d95, accel:28, max:64, grip:0.876, drift:0.972, turn:2.45, style:3},
+ {name:'بورش 911',     hex:0xc8d0d8, accel:26, max:61, grip:0.880, drift:0.973, turn:2.50, style:3},
+ {name:'بي إم M3',     hex:0x1e88e5, accel:25, max:57, grip:0.870, drift:0.977, turn:2.40, style:2},
+ {name:'شاص هجولة',    hex:0xc2a06a, accel:21, max:48, grip:0.800, drift:0.992, turn:3.00, style:4}
+];
+const SKINS=[
+ {n:'ناري',      c1:'#ff3b30', c2:'#ffcc00', p:'flame'},
+ {n:'نيون أزرق', c1:'#12203a', c2:'#00e5ff', p:'neon'},
+ {n:'كربون',     c1:'#1b1b1f', c2:'#7a7a88', p:'carbon'},
+ {n:'ذهبي',      c1:'#e8b400', c2:'#fff3b0', p:'stripe'},
+ {n:'أخضر سام',  c1:'#39ff14', c2:'#0b3d0b', p:'tribal'},
+ {n:'بنفسجي',    c1:'#8a2be2', c2:'#ff00d4', p:'neon'},
+ {n:'أبيض ثلجي', c1:'#f2f2f2', c2:'#d40000', p:'stripe'},
+ {n:'تايغر',     c1:'#ff8c00', c2:'#1a1a1a', p:'tribal'},
+ {n:'أسود مطفي', c1:'#101014', c2:'#ff2d55', p:'stripe'},
+ {n:'سماوي',     c1:'#00b3ff', c2:'#ffffff', p:'stripe'},
+ {n:'توهج وردي', c1:'#ff2d95', c2:'#ffffff', p:'neon'},
+ {n:'صحراوي',    c1:'#c2a06a', c2:'#5a4326', p:'camo'},
+ {n:'عسكري',     c1:'#4a5a34', c2:'#2a3320', p:'camo'},
+ {n:'كروم',      c1:'#c8d0d8', c2:'#7a8794', p:'chrome'},
+ {n:'نحاسي',     c1:'#b87333', c2:'#f0d8a8', p:'chrome'},
+ {n:'أحمر دم',   c1:'#8b0000', c2:'#ff4040', p:'flame'},
+ {n:'أزرق ليلي', c1:'#0a1a4a', c2:'#4d7cff', p:'stripe'},
+ {n:'أوركيد',    c1:'#b06bd6', c2:'#f5e6ff', p:'flame'},
+ {n:'فوسفوري',   c1:'#00ff9d', c2:'#004d33', p:'neon'},
+ {n:'برتقالي',   c1:'#ff6a00', c2:'#2b1200', p:'tribal'},
+ {n:'ماسي',      c1:'#e0f7ff', c2:'#00c8ff', p:'chrome'},
+ {n:'جحيمي',     c1:'#3a0d0d', c2:'#ff7b00', p:'flame'},
+ {n:'ثلجي',      c1:'#dff1ff', c2:'#1e88e5', p:'carbon'},
+ {n:'قاتم ذهبي', c1:'#2b2b2b', c2:'#ffd700', p:'tribal'}
+];
+
+/* ===== الخرائط ===== */
+const MAPS=[
+ {
+  id:'city', name:'المدينة النيون',
+  sky:[0x1a1035,0xff8a4c], fog:[0x6a5580,150,620], fogDensity:1,
+  hemiColor:0x8fb4e8, hemiGround:0x2a2230, hemiInt:1.0,
+  sunColor:0xffd0a0, sunInt:2.6, sunPos:[70,115,45],
+  groundColor:0x2b3129, groundType:'grass',
+  waypoints:[[-350,-350],[0,-350],[350,-350],[350,0],[350,350],[0,350],[-350,350],[-350,0]],
+  worldSize:720, blockSize:90
+ },
+ {
+  id:'desert', name:'الصحراء الكبرى',
+  sky:[0x1e4a7a,0xffd9a0], fog:[0xe0c090,180,750], fogDensity:1,
+  hemiColor:0xfff0d0, hemiGround:0xa08060, hemiInt:1.4,
+  sunColor:0xfff5e0, sunInt:3.2, sunPos:[120,160,80],
+  groundColor:0xd4b070, groundType:'sand',
+  waypoints:[[-300,-300],[-150,-350],[0,-300],[150,-350],[300,-300],[350,-150],[300,0],[350,150],[300,300],[150,350],[0,300],[-150,350],[-300,300],[-350,150],[-300,0],[-350,-150]],
+  worldSize:720, blockSize:90
+ },
+ {
+  id:'mountain', name:'الجبال الضبابية',
+  sky:[0x2a3a4a,0x8a9aaa], fog:[0x8a9aaa,120,520], fogDensity:1.2,
+  hemiColor:0xb0c0d8, hemiGround:0x3a4a58, hemiInt:1.1,
+  sunColor:0xe0f0ff, sunInt:2.0, sunPos:[60,140,40],
+  groundColor:0x4a5048, groundType:'rock',
+  waypoints:[[-300,-250],[-150,-300],[0,-250],[150,-300],[300,-250],[300,-100],[200,0],[300,100],[300,250],[150,300],[0,250],[-150,300],[-300,250],[-300,100],[-200,0],[-300,-100]],
+  worldSize:720, blockSize:90
+ },
+ {
+  id:'airport', name:'المطار المهجور',
+  sky:[0x0a2a4a,0x4a9ad0], fog:[0x8090a0,200,800], fogDensity:0.8,
+  hemiColor:0xc0d8f0, hemiGround:0x404050, hemiInt:1.3,
+  sunColor:0xffffff, sunInt:3.0, sunPos:[100,180,100],
+  groundColor:0x404040, groundType:'concrete',
+  waypoints:[[-300,-200],[-100,-250],[100,-250],[300,-200],[350,0],[300,200],[100,250],[-100,250],[-300,200],[-350,0]],
+  worldSize:720, blockSize:90
+ }
+];
+const WORLD=720, BLOCK=90, RN=8, ROAD_W=18, HALF=WORLD/2;
+
+/* ===== إعداد العرض ===== */
+const canvas=$('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+
+const scene=new THREE.Scene();
+scene.fog=new THREE.Fog(0x6a5580,150,620);
+const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,0.4,3000);
+camera.position.set(0,8,-14);
+
+const pmrem=new THREE.PMREMGenerator(renderer);
+scene.environment=pmrem.fromScene(new RoomEnvironment(),0.05).texture;
+
+const hemi=new THREE.HemisphereLight(0x8fb4e8,0x2a2230,1.0); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffd0a0,2.6);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.near=1; sun.shadow.camera.far=420;
+sun.shadow.camera.left=-95; sun.shadow.camera.right=95;
+sun.shadow.camera.top=95; sun.shadow.camera.bottom=-95;
+sun.shadow.bias=-0.0005; sun.shadow.normalBias=0.6;
+scene.add(sun); scene.add(sun.target);
+
+const skyGeo=new THREE.SphereGeometry(1400,32,18);
+const skyMat=new THREE.ShaderMaterial({
+  side:THREE.BackSide,depthWrite:false,fog:false,
+  uniforms:{top:{value:new THREE.Color(0x1a1035)},bottom:{value:new THREE.Color(0xff8a4c)}},
+  vertexShader:`varying vec3 vP;void main(){vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform vec3 top;uniform vec3 bottom;varying vec3 vP;
+    void main(){float h=normalize(vP).y;float t=clamp(pow(max(h,0.0),0.55),0.0,1.0);
+    gl_FragColor=vec4(mix(bottom,top,t),1.0);}`
+});
+const sky=new THREE.Mesh(skyGeo,skyMat); sky.renderOrder=-1; scene.add(sky);
+
+const rt=new THREE.WebGLRenderTarget(innerWidth,innerHeight,{type:THREE.HalfFloatType,samples:4});
+const composer=new EffectComposer(renderer,rt);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),0.62,0.55,0.85);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+/* ===== توليد السكنات ===== */
+const skinCache={};
+function getSkinMaps(idx){
+  if(skinCache[idx]) return skinCache[idx];
+  const skin=SKINS[idx%SKINS.length];
+  const S=512;
+  const c=document.createElement('canvas'); c.width=S; c.height=S;
+  const g=c.getContext('2d');
+  const E=document.createElement('canvas'); E.width=S; E.height=S;
+  const ge=E.getContext('2d'); ge.fillStyle='#000'; ge.fillRect(0,0,S,S);
+  g.fillStyle=skin.c1; g.fillRect(0,0,S,S);
+  const grd=g.createLinearGradient(0,0,0,S);
+  grd.addColorStop(0,'rgba(255,255,255,0.22)');
+  grd.addColorStop(0.45,'rgba(255,255,255,0)');
+  grd.addColorStop(1,'rgba(0,0,0,0.32)');
+  g.fillStyle=grd; g.fillRect(0,0,S,S);
+  const t=skin.p;
+  if(t==='stripe'){
+    g.fillStyle=skin.c2;
+    g.fillRect(S*0.415,0,S*0.055,S); g.fillRect(S*0.53,0,S*0.055,S);
+  } else if(t==='flame'){
+    g.fillStyle=skin.c2;
+    for(let i=0;i<9;i++){
+      const y=S-i*(S/9);
+      g.beginPath();
+      g.moveTo(0,y);
+      g.quadraticCurveTo(S*0.3,y-S*0.14,S*0.55,y-S*0.02);
+      g.quadraticCurveTo(S*0.8,y+S*0.06,S,y-S*0.10);
+      g.lineTo(S,y+S*0.085); g.lineTo(0,y+S*0.085);
+      g.closePath(); g.fill();
+    }
+  } else if(t==='carbon'){
+    for(let x=0;x<S;x+=16) for(let y=0;y<S;y+=16){
+      g.fillStyle=(((x/16)+(y/16))%2)?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.30)';
+      g.fillRect(x,y,16,16);
+    }
+    g.globalAlpha=0.55; g.fillStyle=skin.c2;
+    for(let i=0;i<6;i++) g.fillRect(0,i*S/6+8,S,4);
+    g.globalAlpha=1;
+  } else if(t==='tribal'){
+    g.strokeStyle=skin.c2; g.lineWidth=12; g.lineCap='round';
+    for(let i=0;i<5;i++){
+      g.beginPath();
+      g.moveTo(-20,i*S/5+30);
+      g.bezierCurveTo(S*0.35,i*S/5-30,S*0.65,i*S/5+90,S+20,i*S/5+40);
+      g.stroke();
+    }
+  } else if(t==='neon'){
+    g.fillStyle='rgba(4,8,16,0.55)'; g.fillRect(0,0,S,S);
+    const lines=(ctx,w,col,blur)=>{
+      ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=w; ctx.lineCap='round';
+      if(blur){ctx.shadowColor=col; ctx.shadowBlur=blur;}
+      for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(0,S*0.18+i*S*0.22); ctx.lineTo(S,S*0.18+i*S*0.22); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(S*0.5,0); ctx.lineTo(S*0.5,S); ctx.stroke();
+      ctx.restore();
+    };
+    lines(g,16,skin.c2,24); lines(g,6,'#ffffff',0); lines(ge,16,skin.c2,26);
+  } else if(t==='chrome'){
+    const cg=g.createLinearGradient(0,0,S,S);
+    cg.addColorStop(0,skin.c1); cg.addColorStop(0.32,'#ffffff');
+    cg.addColorStop(0.5,skin.c2); cg.addColorStop(0.72,'#ffffff');
+    cg.addColorStop(1,skin.c1);
+    g.fillStyle=cg; g.fillRect(0,0,S,S);
+  } else if(t==='camo'){
+    const rnd=mulberry32(7);
+    g.fillStyle=skin.c2;
+    for(let i=0;i<26;i++){
+      const x=rnd()*S,y=rnd()*S,r=20+rnd()*45;
+      g.beginPath(); g.ellipse(x,y,r,r*0.62,rnd()*3,0,6.283); g.fill();
+    }
+  }
+  const map=new THREE.CanvasTexture(c);
+  map.colorSpace=THREE.SRGBColorSpace; map.anisotropy=4;
+  let emap=null;
+  if(t==='neon'){
+    emap=new THREE.CanvasTexture(E);
+    emap.colorSpace=THREE.SRGBColorSpace; emap.anisotropy=4;
+  }
+  skinCache[idx]={map,emap};
+  return skinCache[idx];
+}
+
+/* ===== مواد ===== */
+const tireMat =new THREE.MeshStandardMaterial({color:0x141519,roughness:0.95,metalness:0.05});
+const rimMat  =new THREE.MeshStandardMaterial({color:0xb9c2cf,metalness:1,roughness:0.22,envMapIntensity:1.5});
+const darkMat =new THREE.MeshStandardMaterial({color:0x14161c,metalness:0.45,roughness:0.55});
+const glassMat=new THREE.MeshPhysicalMaterial({color:0x0a1220,metalness:0.15,roughness:0.06,
+  transparent:true,opacity:0.88,envMapIntensity:2.2,clearcoat:1});
+const headMat =new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff2c8,emissiveIntensity:3.2});
+const tailMat =new THREE.MeshStandardMaterial({color:0x2a0006,emissive:0xff1a2e,emissiveIntensity:2.6});
+
+const wheelGeo=new THREE.CylinderGeometry(0.42,0.42,0.30,20); wheelGeo.rotateZ(Math.PI/2);
+const rimGeo  =new THREE.CylinderGeometry(0.255,0.255,0.315,14); rimGeo.rotateZ(Math.PI/2);
+
+/* ===== بناء السيارة (5 أنماط) ===== */
+function buildCarMesh(carIdx,skinIdx){
+  const carDef=CARS[carIdx];
+  const style=carDef.style;
+  const {map,emap}=getSkinMaps(skinIdx);
+  const group=new THREE.Group();
+  const body=new THREE.Group(); group.add(body);
+
+  const paint=new THREE.MeshStandardMaterial({
+    map,metalness:0.72,roughness:0.28,envMapIntensity:1.15,
+    emissive:emap?0xffffff:0x000000,emissiveMap:emap||null,emissiveIntensity:emap?1.7:0
+  });
+
+  const add=(geo,mat,x,y,z,cast=true,rot)=>{
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set(x,y,z);
+    if(rot) m.rotation.set(rot[0],rot[1],rot[2]);
+    m.castShadow=cast; m.receiveShadow=true;
+    body.add(m); return m;
+  };
+
+  let trackW=0.95, wheelR=0.42, length=4.40, width=1.90, height=0.58, cabinY=1.05;
+  const wheels=[];
+
+  if(style===0){ // sedan
+    length=4.5; width=1.92; height=0.62; wheelR=0.42; trackW=0.95;
+    add(new THREE.BoxGeometry(width,height,length),paint,0,0.62,0);
+    add(new THREE.BoxGeometry(width-0.08,0.28,1.55),paint,0,0.94,1.42);
+    add(new THREE.BoxGeometry(width-0.08,0.28,1.15),paint,0,0.94,-1.72);
+    add(new THREE.BoxGeometry(width-0.32,0.55,2.1),glassMat,0,1.14,-0.15);
+    add(new THREE.BoxGeometry(width-0.44,0.10,1.7),paint,0,1.42,-0.24);
+    cabinY=1.14;
+  } else if(style===1){ // coupe
+    length=4.35; width=1.86; height=0.55; wheelR=0.40; trackW=0.92;
+    add(new THREE.BoxGeometry(width,height,length),paint,0,0.58,0);
+    add(new THREE.BoxGeometry(width-0.10,0.26,1.5),paint,0,0.88,1.38);
+    add(new THREE.BoxGeometry(width-0.10,0.30,1.05),paint,0,0.88,-1.68);
+    add(new THREE.BoxGeometry(width-0.36,0.50,2.0),glassMat,0,1.06,-0.10);
+    add(new THREE.BoxGeometry(width-0.50,0.10,1.55),paint,0,1.30,-0.18);
+    cabinY=1.06;
+  } else if(style===2){ // muscle
+    length=4.55; width=2.00; height=0.62; wheelR=0.45; trackW=1.00;
+    add(new THREE.BoxGeometry(width,height,length),paint,0,0.60,0);
+    add(new THREE.BoxGeometry(width-0.04,0.32,1.65),paint,0,0.92,1.40);
+    add(new THREE.BoxGeometry(width-0.04,0.30,1.05),paint,0,0.92,-1.72);
+    add(new THREE.BoxGeometry(width-0.38,0.50,1.9),glassMat,0,1.10,-0.12);
+    add(new THREE.BoxGeometry(width-0.54,0.10,1.55),paint,0,1.36,-0.18);
+    // شفط هواء
+    add(new THREE.BoxGeometry(0.60,0.14,0.60),darkMat,0,1.10,1.30);
+    cabinY=1.10;
+  } else if(style===3){ // supercar
+    length=4.6; width=1.98; height=0.48; wheelR=0.44; trackW=1.02;
+    add(new THREE.BoxGeometry(width,height,length),paint,0,0.52,0);
+    // مقدمة منخفضة
+    add(new THREE.BoxGeometry(width-0.10,0.20,1.7),paint,0,0.78,1.45);
+    add(new THREE.BoxGeometry(width-0.10,0.26,1.1),paint,0,0.78,-1.78);
+    // مقصورة منخفضة
+    add(new THREE.BoxGeometry(width-0.44,0.42,1.7),glassMat,0,1.00,-0.15);
+    add(new THREE.BoxGeometry(width-0.60,0.09,1.35),paint,0,1.22,-0.24);
+    // جناح خلفي كبير
+    add(new THREE.BoxGeometry(0.10,0.34,0.16),darkMat,0.70,1.06,-1.98);
+    add(new THREE.BoxGeometry(0.10,0.34,0.16),darkMat,-0.70,1.06,-1.98);
+    add(new THREE.BoxGeometry(1.80,0.07,0.50),paint,0,1.24,-1.98);
+    cabinY=1.00;
+  } else { // truck
+    length=4.7; width=2.05; height=0.78; wheelR=0.55; trackW=1.02;
+    add(new THREE.BoxGeometry(width,height,length),paint,0,0.72,0);
+    add(new THREE.BoxGeometry(width-0.10,0.42,1.55),paint,0,1.10,1.45);
+    add(new THREE.BoxGeometry(width-0.10,0.36,1.05),paint,0,1.10,-1.75);
+    add(new THREE.BoxGeometry(width-0.32,0.55,2.1),glassMat,0,1.35,-0.10);
+    add(new THREE.BoxGeometry(width-0.44,0.10,1.75),paint,0,1.65,-0.15);
+    cabinY=1.35;
+  }
+
+  // مصدات
+  add(new THREE.BoxGeometry(width+0.08,0.30,0.40),darkMat,0,0.42,length/2-0.02);
+  add(new THREE.BoxGeometry(width+0.08,0.30,0.40),darkMat,0,0.42,-length/2+0.02);
+  // تنانير
+  add(new THREE.BoxGeometry(0.14,0.16,length*0.55),darkMat, width/2-0.02,0.38,0);
+  add(new THREE.BoxGeometry(0.14,0.16,length*0.55),darkMat,-width/2+0.02,0.38,0);
+
+  // أنوار
+  const hl1=add(new THREE.BoxGeometry(0.44,0.16,0.10),headMat, width/2-0.35,0.72,length/2-0.02,false);
+  const hl2=add(new THREE.BoxGeometry(0.44,0.16,0.10),headMat,-width/2+0.35,0.72,length/2-0.02,false);
+  const tl1=add(new THREE.BoxGeometry(0.52,0.14,0.10),tailMat, width/2-0.35,0.76,-length/2+0.02,false);
+  const tl2=add(new THREE.BoxGeometry(0.52,0.14,0.10),tailMat,-width/2+0.35,0.76,-length/2+0.02,false);
+
+  // شكمان
+  const ex1=add(new THREE.CylinderGeometry(0.10,0.10,0.28,10),darkMat, width/2-0.40,0.34,-length/2+0.02,true,[Math.PI/2,0,0]);
+  const ex2=add(new THREE.CylinderGeometry(0.10,0.10,0.28,10),darkMat,-width/2+0.40,0.34,-length/2+0.02,true,[Math.PI/2,0,0]);
+
+  // عجلات
+  const wbF=length/2-0.95, wbR=-length/2+0.95;
+  const pos=[[trackW,wbF],[-trackW,wbF],[trackW,wbR],[-trackW,wbR]];
+  for(const [wx,wz] of pos){
+    const pivot=new THREE.Group();
+    pivot.position.set(wx,wheelR,wz);
+    const spin=new THREE.Group();
+    const tire=new THREE.Mesh(wheelGeo,tireMat); tire.castShadow=true;
+    tire.scale.set(1,wheelR/0.42,wheelR/0.42);
+    const rim=new THREE.Mesh(rimGeo,rimMat); rim.scale.set(1,wheelR/0.42,wheelR/0.42);
+    spin.add(tire); spin.add(rim);
+    pivot.add(spin);
+    group.add(pivot);
+    wheels.push({pivot,spin,front:wz>0});
+  }
+
+  return {group,body,wheels,tail:[tl1,tl2],head:[hl1,hl2],exhaust:[ex1,ex2],carDef,style};
+}
+
+/* ===== الدخان والشرر ===== */
+const SMOKE_N=340;
+const smokePos=new Float32Array(SMOKE_N*3);
+const smokeSize=new Float32Array(SMOKE_N);
+const smokeAlpha=new Float32Array(SMOKE_N);
+const smokeColor=new Float32Array(SMOKE_N*3);
+const smokeData=[];
+for(let i=0;i<SMOKE_N;i++){ smokeData.push({life:0,max:1,vx:0,vy:0,vz:0}); smokePos[i*3+1]=-999; }
+
+function makeSmokeTex(){
+  const S=64,c=document.createElement('canvas'); c.width=c.height=S;
+  const g=c.getContext('2d');
+  const grd=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  grd.addColorStop(0,'rgba(255,255,255,0.9)');
+  grd.addColorStop(0.45,'rgba(255,255,255,0.35)');
+  grd.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=grd; g.fillRect(0,0,S,S);
+  return new THREE.CanvasTexture(c);
+}
+const smokeGeo=new THREE.BufferGeometry();
+smokeGeo.setAttribute('position',new THREE.BufferAttribute(smokePos,3));
+smokeGeo.setAttribute('aSize',new THREE.BufferAttribute(smokeSize,1));
+smokeGeo.setAttribute('aAlpha',new THREE.BufferAttribute(smokeAlpha,1));
+smokeGeo.setAttribute('aColor',new THREE.BufferAttribute(smokeColor,3));
+const smokeMat=new THREE.ShaderMaterial({
+  uniforms:{uTex:{value:makeSmokeTex()}},
+  vertexShader:`attribute float aSize;attribute float aAlpha;attribute vec3 aColor;
+    varying float vA;varying vec3 vC;
+    void main(){vA=aAlpha;vC=aColor;vec4 mv=modelViewMatrix*vec4(position,1.0);
+    gl_PointSize=aSize*(320.0/max(1.0,-mv.z));gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`uniform sampler2D uTex;varying float vA;varying vec3 vC;
+    void main(){vec4 t=texture2D(uTex,gl_PointCoord);
+    if(t.a*vA<0.01) discard;
+    gl_FragColor=vec4(vC,t.a*vA);}`,
+  transparent:true,depthWrite:false
+});
+const smokePoints=new THREE.Points(smokeGeo,smokeMat);
+smokePoints.frustumCulled=false;
+scene.add(smokePoints);
+let smokeCursor=0;
+
+function spawnSmoke(x,y,z,vx,vz,color=[0.86,0.88,0.92],sizeMul=1,lifeMul=1){
+  const i=smokeCursor; smokeCursor=(smokeCursor+1)%SMOKE_N;
+  const d=smokeData[i];
+  d.life=d.max=(0.85+Math.random()*0.6)*lifeMul;
+  d.vx=vx*0.22+(Math.random()-0.5)*1.6;
+  d.vy=0.7+Math.random()*0.9;
+  d.vz=vz*0.22+(Math.random()-0.5)*1.6;
+  smokePos[i*3]=x; smokePos[i*3+1]=y; smokePos[i*3+2]=z;
+  smokeSize[i]=(1.4+Math.random()*1.6)*sizeMul;
+  smokeAlpha[i]=0.65;
+  smokeColor[i*3]=color[0]; smokeColor[i*3+1]=color[1]; smokeColor[i*3+2]=color[2];
+}
+function updateSmoke(dt){
+  for(let i=0;i<SMOKE_N;i++){
+    const d=smokeData[i];
+    if(d.life<=0){ smokeAlpha[i]=0; continue; }
+    d.life-=dt;
+    smokePos[i*3]  +=d.vx*dt;
+    smokePos[i*3+1]+=d.vy*dt;
+    smokePos[i*3+2]+=d.vz*dt;
+    d.vx*=0.96; d.vz*=0.96; d.vy*=0.97;
+    smokeSize[i]+=dt*2.2;
+    smokeAlpha[i]=Math.max(0,d.life/d.max)*0.6;
+  }
+  smokeGeo.attributes.position.needsUpdate=true;
+  smokeGeo.attributes.aSize.needsUpdate=true;
+  smokeGeo.attributes.aAlpha.needsUpdate=true;
+  smokeGeo.attributes.aColor.needsUpdate=true;
+}
+
+/* ===== آثار الإطارات ===== */
+const MAX_SKID=600;
+const skidGeo=new THREE.PlaneGeometry(0.26,0.95); skidGeo.rotateX(-Math.PI/2);
+const skidMat=new THREE.MeshBasicMaterial({color:0x08080a,transparent:true,opacity:0.5,depthWrite:false});
+const skidMesh=new THREE.InstancedMesh(skidGeo,skidMat,MAX_SKID);
+skidMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+skidMesh.frustumCulled=false;
+skidMesh.renderOrder=1;
+scene.add(skidMesh);
+const _dm=new THREE.Object3D();
+for(let i=0;i<MAX_SKID;i++){ _dm.scale.set(0,0,0); _dm.updateMatrix(); skidMesh.setMatrixAt(i,_dm.matrix); }
+skidMesh.instanceMatrix.needsUpdate=true;
+let skidCursor=0;
+function addSkid(x,z,a){
+  _dm.position.set(x,0.028,z);
+  _dm.rotation.set(0,a,0);
+  _dm.scale.set(1,1,1);
+  _dm.updateMatrix();
+  skidMesh.setMatrixAt(skidCursor,_dm.matrix);
+  skidMesh.instanceMatrix.needsUpdate=true;
+  skidCursor=(skidCursor+1)%MAX_SKID;
+}
+
+/* ===== تحميل الخريطة ===== */
+const mapGroup=new THREE.Group(); scene.add(mapGroup);
+let collisionBoxes=[]; let collisionCones=[];
+let trackWaypoints=[]; let checkpoints=[];
+let currentMapIdx=0;
+const waypointMarker=new THREE.Group(); scene.add(waypointMarker);
+
+function clearMap(){
+  while(mapGroup.children.length){
+    const c=mapGroup.children[0];
+    mapGroup.remove(c);
+    c.traverse(o=>{
+      if(o.geometry) o.geometry.dispose();
+    });
+  }
+  while(waypointMarker.children.length){
+    const c=waypointMarker.children[0];
+    waypointMarker.remove(c);
+    if(c.geometry) c.geometry.dispose();
+  }
+  collisionBoxes=[]; collisionCones=[]; trackWaypoints=[]; checkpoints=[];
+}
+
+function loadMap(idx){
+  clearMap();
+  currentMapIdx=idx;
+  const map=MAPS[idx];
+
+  scene.fog.color.setHex(map.fog[0]);
+  scene.fog.near=map.fog[1];
+  scene.fog.far=map.fog[2];
+  skyMat.uniforms.top.value.setHex(map.sky[0]);
+  skyMat.uniforms.bottom.value.setHex(map.sky[1]);
+  hemi.color.setHex(map.hemiColor);
+  hemi.groundColor.setHex(map.hemiGround);
+  hemi.intensity=map.hemiInt;
+  sun.color.setHex(map.sunColor);
+  sun.intensity=map.sunInt;
+
+  trackWaypoints=map.waypoints.map(w=>({x:w[0], z:w[1]}));
+
+  const rnd=mulberry32(1000+idx);
+
+  // الأرض
+  const ground=new THREE.Mesh(
+    new THREE.PlaneGeometry(WORLD+500,WORLD+500,8,8),
+    new THREE.MeshStandardMaterial({color:map.groundColor,roughness:1,metalness:0})
+  );
+  ground.rotation.x=-Math.PI/2; ground.position.y=-0.03; ground.receiveShadow=true;
+  mapGroup.add(ground);
+
+  // الطرق
+  const roadMat=new THREE.MeshStandardMaterial({color:0x22242b,roughness:0.92,metalness:0.05});
+  if(map.groundType==='concrete'){
+    const rg=new THREE.PlaneGeometry(WORLD+400,WORLD+400);
+    const rmesh=new THREE.Mesh(rg,new THREE.MeshStandardMaterial({color:0x2a2a2a,roughness:0.95}));
+    rmesh.rotation.x=-Math.PI/2; rmesh.position.y=0.01; rmesh.receiveShadow=true;
+    mapGroup.add(rmesh);
+  } else {
+    const gV=new THREE.PlaneGeometry(ROAD_W,WORLD+ROAD_W);
+    const gH=new THREE.PlaneGeometry(WORLD+ROAD_W,ROAD_W);
+    for(let i=0;i<=RN;i++){
+      const p=i*BLOCK-HALF;
+      const v=new THREE.Mesh(gV,roadMat); v.rotation.x=-Math.PI/2; v.position.set(p,0.005,0); v.receiveShadow=true; mapGroup.add(v);
+      const h=new THREE.Mesh(gH,roadMat); h.rotation.x=-Math.PI/2; h.position.set(0,0.005,p); h.receiveShadow=true; mapGroup.add(h);
+    }
+  }
+
+  // مسار السباق (خطوط على الأرض)
+  const trackMat=new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:1.5,
+    transparent:true,opacity:0.55,roughness:0.4});
+  const trackGeo=new THREE.BoxGeometry(0.4,0.02,3.0);
+  const segs=[];
+  for(let i=0;i<trackWaypoints.length;i++){
+    const a=trackWaypoints[i], b=trackWaypoints[(i+1)%trackWaypoints.length];
+    const dist=Math.hypot(b.x-a.x,b.z-a.z);
+    const n=Math.floor(dist/6);
+    for(let k=0;k<n;k++){
+      const t=k/n;
+      const x=lerp(a.x,b.x,t), z=lerp(a.z,b.z,t);
+      const angle=Math.atan2(b.x-a.x,b.z-a.z);
+      segs.push([x,z,angle]);
+    }
+  }
+  const trackInst=new THREE.InstancedMesh(trackGeo,trackMat,segs.length);
+  const dm2=new THREE.Object3D();
+  segs.forEach((s,i)=>{
+    dm2.position.set(s[0],0.05,s[1]);
+    dm2.rotation.set(0,s[2],0);
+    dm2.scale.set(1,1,1); dm2.updateMatrix();
+    trackInst.setMatrixAt(i,dm2.matrix);
+  });
+  trackInst.instanceMatrix.needsUpdate=true;
+  mapGroup.add(trackInst);
+
+  // علامات نقاط التفتيش (حلقات)
+  const cpMat=new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,
+    emissiveIntensity:3.0,transparent:true,opacity:0.7,side:THREE.DoubleSide});
+  for(let i=0;i<trackWaypoints.length;i++){
+    const wp=trackWaypoints[i];
+    const next=trackWaypoints[(i+1)%trackWaypoints.length];
+    const angle=Math.atan2(next.x-wp.x,next.z-wp.z);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(4.2,0.35,10,40),cpMat);
+    ring.position.set(wp.x,3.5,wp.z);
+    ring.rotation.y=angle;
+    ring.rotation.x=Math.PI/2;
+    waypointMarker.add(ring);
+    checkpoints.push({mesh:ring,x:wp.x,z:wp.z,radius:8});
+  }
+
+  // عناصر البيئة حسب الخريطة
+  if(map.groundType==='grass'){
+    buildCityMap(rnd);
+  } else if(map.groundType==='sand'){
+    buildDesertMap(rnd);
+  } else if(map.groundType==='rock'){
+    buildMountainMap(rnd);
+  } else if(map.groundType==='concrete'){
+    buildAirportMap(rnd);
+  }
+
+  // مخاريط على المسار (عقبات)
+  buildTrackCones(rnd);
+}
+
+function buildCityMap(rnd){
+  const win=makeWindowTextures();
+  const bMat=new THREE.MeshStandardMaterial({
+    map:win.alb, emissiveMap:win.emi, emissive:0xffffff, emissiveIntensity:1.25,
+    color:0xa8b4c8, roughness:0.82, metalness:0.15
+  });
+  const treePos=[];
+  for(let i=0;i<RN;i++) for(let j=0;j<RN;j++){
+    const x0=i*BLOCK-HALF+ROAD_W/2+7, x1=(i+1)*BLOCK-HALF-ROAD_W/2-7;
+    const z0=j*BLOCK-HALF+ROAD_W/2+7, z1=(j+1)*BLOCK-HALF-ROAD_W/2-7;
+    const n=1+Math.floor(rnd()*3);
+    for(let k=0;k<n;k++){
+      const w=11+rnd()*15, d=11+rnd()*15;
+      const bx=x0+rnd()*Math.max(0.5,(x1-x0-w));
+      const bz=z0+rnd()*Math.max(0.5,(z1-z0-d));
+      const cx=bx+w/2, cz=bz+d/2;
+      if(distToTrack(cx,cz,trackWaypoints)<16) continue;
+      const h=9+rnd()*40;
+      const mesh=new THREE.Mesh(buildingGeo(w,h,d,8),bMat);
+      mesh.position.set(cx,h/2,cz);
+      mesh.castShadow=true; mesh.receiveShadow=true;
+      mapGroup.add(mesh);
+      collisionBoxes.push({minX:bx,maxX:bx+w,minZ:bz,maxZ:bz+d});
+    }
+    for(let k=0;k<3;k++){
+      const tx=x0+rnd()*(x1-x0), tz=z0+rnd()*(z1-z0);
+      if(distToTrack(tx,tz,trackWaypoints)<14) continue;
+      let inside=false;
+      for(const b of collisionBoxes){
+        if(tx>b.minX-3&&tx<b.maxX+3&&tz>b.minZ-3&&tz<b.maxZ+3){inside=true;break;}
+      }
+      if(inside) continue;
+      treePos.push([tx,tz]);
+    }
+  }
+  buildTrees(treePos,0x2f5d3a,0x3a2a1e);
+}
+
+function buildDesertMap(rnd){
+  const rockMat=new THREE.MeshStandardMaterial({color:0x8a6a4a,roughness:0.95,metalness:0.05});
+  const cactusMat=new THREE.MeshStandardMaterial({color:0x4a7a3a,roughness:0.9});
+  for(let i=0;i<60;i++){
+    const x=(rnd()-0.5)*WORLD*0.95, z=(rnd()-0.5)*WORLD*0.95;
+    if(distToTrack(x,z,trackWaypoints)<16) continue;
+    const r=1.5+rnd()*3;
+    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(r),rockMat);
+    rock.position.set(x,r*0.6,z);
+    rock.rotation.set(rnd()*3,rnd()*3,rnd()*3);
+    rock.castShadow=true; rock.receiveShadow=true;
+    mapGroup.add(rock);
+    collisionBoxes.push({minX:x-r,maxX:x+r,minZ:z-r,maxZ:z+r});
+  }
+  for(let i=0;i<40;i++){
+    const x=(rnd()-0.5)*WORLD*0.95, z=(rnd()-0.5)*WORLD*0.95;
+    if(distToTrack(x,z,trackWaypoints)<12) continue;
+    const g=new THREE.Group();
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.5,4,8),cactusMat);
+    trunk.position.y=2; trunk.castShadow=true;
+    g.add(trunk);
+    const arm1=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.3,1.8,8),cactusMat);
+    arm1.position.set(0.7,2.4,0); arm1.rotation.z=Math.PI/3; arm1.castShadow=true;
+    g.add(arm1);
+    const arm2=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.3,1.5,8),cactusMat);
+    arm2.position.set(-0.6,2.8,0); arm2.rotation.z=-Math.PI/3; arm2.castShadow=true;
+    g.add(arm2);
+    g.position.set(x,0,z);
+    mapGroup.add(g);
+    collisionBoxes.push({minX:x-0.8,maxX:x+0.8,minZ:z-0.8,maxZ:z+0.8});
+  }
+  // كثبان رملية (للزينة)
+  const duneMat=new THREE.MeshStandardMaterial({color:0xc4a070,roughness:1});
+  for(let i=0;i<30;i++){
+    const x=(rnd()-0.5)*WORLD*0.98, z=(rnd()-0.5)*WORLD*0.98;
+    if(distToTrack(x,z,trackWaypoints)<20) continue;
+    const d=new THREE.Mesh(new THREE.SphereGeometry(8+rnd()*10,12,8),duneMat);
+    d.scale.y=0.35;
+    d.position.set(x,0,z);
+    d.receiveShadow=true;
+    mapGroup.add(d);
+  }
+}
+
+function buildMountainMap(rnd){
+  const rockMat=new THREE.MeshStandardMaterial({color:0x5a5f58,roughness:0.95});
+  const pineTrunkMat=new THREE.MeshStandardMaterial({color:0x3a2a1e,roughness:1});
+  const pineLeafMat=new THREE.MeshStandardMaterial({color:0x2a4a32,roughness:1});
+  const treePos=[];
+  for(let i=0;i<70;i++){
+    const x=(rnd()-0.5)*WORLD*0.95, z=(rnd()-0.5)*WORLD*0.95;
+    if(distToTrack(x,z,trackWaypoints)<15) continue;
+    const r=2+rnd()*5;
+    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(r,0),rockMat);
+    rock.position.set(x,r*0.5,z);
+    rock.rotation.set(rnd()*3,rnd()*3,rnd()*3);
+    rock.castShadow=true; rock.receiveShadow=true;
+    mapGroup.add(rock);
+    collisionBoxes.push({minX:x-r*0.8,maxX:x+r*0.8,minZ:z-r*0.8,maxZ:z+r*0.8});
+  }
+  for(let i=0;i<90;i++){
+    const x=(rnd()-0.5)*WORLD*0.95, z=(rnd()-0.5)*WORLD*0.95;
+    if(distToTrack(x,z,trackWaypoints)<12) continue;
+    const g=new THREE.Group();
+    const h=4+rnd()*3;
+    const trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,h,6),pineTrunkMat);
+    trunk.position.y=h/2; trunk.castShadow=true;
+    g.add(trunk);
+    for(let k=0;k<3;k++){
+      const cone=new THREE.Mesh(new THREE.ConeGeometry(2-k*0.4,2,7),pineLeafMat);
+      cone.position.y=h*0.6+k*1.1; cone.castShadow=true;
+      g.add(cone);
+    }
+    g.position.set(x,0,z);
+    mapGroup.add(g);
+    collisionBoxes.push({minX:x-1,maxX:x+1,minZ:z-1,maxZ:z+1});
+  }
+  // جبال بعيدة
+  const cliffMat=new THREE.MeshStandardMaterial({color:0x4a4f48,roughness:1});
+  for(let i=0;i<15;i++){
+    const angle=rnd()*Math.PI*2;
+    const dist=340+rnd()*40;
+    const x=Math.cos(angle)*dist, z=Math.sin(angle)*dist;
+    if(distToTrack(x,z,trackWaypoints)<20) continue;
+    const h=40+rnd()*60;
+    const cliff=new THREE.Mesh(new THREE.ConeGeometry(15+rnd()*10,h,6),cliffMat);
+    cliff.position.set(x,h/2-2,z);
+    cliff.castShadow=true;
+    mapGroup.add(cliff);
+  }
+}
+
+function buildAirportMap(rnd){
+  // مدرج طويل
+  const runwayMat=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.9});
+  const runway=new THREE.Mesh(new THREE.PlaneGeometry(30,500),runwayMat);
+  runway.rotation.x=-Math.PI/2; runway.position.set(0,0.02,0);
+  runway.receiveShadow=true;
+  mapGroup.add(runway);
+  // علامات المدرج
+  const markMat=new THREE.MeshBasicMaterial({color:0xffd700});
+  for(let i=-240;i<240;i+=15){
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(0.8,8),markMat);
+    m.rotation.x=-Math.PI/2; m.position.set(0,0.03,i);
+    mapGroup.add(m);
+  }
+  // هناجر
+  const hangarMat=new THREE.MeshStandardMaterial({color:0x506070,metalness:0.5,roughness:0.6});
+  const hangars=[[-180,-150,80,20,100],[180,-150,80,20,100],[-180,150,80,20,100],[180,150,80,20,100]];
+  for(const [hx,hz,w,h,d] of hangars){
+    if(distToTrack(hx,hz,trackWaypoints)<20) continue;
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),hangarMat);
+    mesh.position.set(hx,h/2,hz);
+    mesh.castShadow=true; mesh.receiveShadow=true;
+    mapGroup.add(mesh);
+    collisionBoxes.push({minX:hx-w/2,maxX:hx+w/2,minZ:hz-d/2,maxZ:hz+d/2});
+    // سقف مقوس
+    const roof=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w/2,d,16,1,false,0,Math.PI),hangarMat);
+    roof.rotation.z=Math.PI/2; roof.rotation.x=Math.PI/2;
+    roof.position.set(hx,h,hz);
+    roof.castShadow=true;
+    mapGroup.add(roof);
+  }
+  // برج مراقبة
+  const towerMat=new THREE.MeshStandardMaterial({color:0x606870,metalness:0.6,roughness:0.5});
+  const tower=new THREE.Mesh(new THREE.BoxGeometry(8,40,8),towerMat);
+  tower.position.set(0,20,-200);
+  tower.castShadow=true;
+  mapGroup.add(tower);
+  collisionBoxes.push({minX:-4,maxX:4,minZ:-204,maxZ:-196});
+  const top=new THREE.Mesh(new THREE.BoxGeometry(12,6,12),towerMat);
+  top.position.set(0,42,-200);
+  top.castShadow=true;
+  mapGroup.add(top);
+  // سيارات قديمة متوقفة
+  for(let i=0;i<20;i++){
+    const x=(rnd()-0.5)*WORLD*0.9, z=(rnd()-0.5)*WORLD*0.9;
+    if(distToTrack(x,z,trackWaypoints)<14) continue;
+    const car=new THREE.Mesh(new THREE.BoxGeometry(2,1.2,4),
+      new THREE.MeshStandardMaterial({color:0x404040,metalness:0.4,roughness:0.7}));
+    car.position.set(x,0.6,z);
+    car.rotation.y=rnd()*Math.PI*2;
+    car.castShadow=true;
+    mapGroup.add(car);
+    collisionBoxes.push({minX:x-1.5,maxX:x+1.5,minZ:z-2.5,maxZ:z+2.5});
+  }
+}
+
+function buildTrackCones(rnd){
+  const coneMat=new THREE.MeshStandardMaterial({color:0xff6a00,emissive:0x882200,emissiveIntensity:0.5,roughness:0.7});
+  const coneBaseMat=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:1});
+  for(let i=0;i<trackWaypoints.length;i++){
+    const wp=trackWaypoints[i];
+    const next=trackWaypoints[(i+1)%trackWaypoints.length];
+    const segLen=Math.hypot(next.x-wp.x,next.z-wp.z);
+    const perp=Math.atan2(next.x-wp.x,next.z-wp.z)+Math.PI/2;
+    const nCones=Math.floor(segLen/60);
+    for(let k=1;k<=nCones;k++){
+      const t=k/(nCones+1);
+      const cx=lerp(wp.x,next.x,t);
+      const cz=lerp(wp.z,next.z,t);
+      const side=(k%2===0)?1:-1;
+      const offX=Math.cos(perp)*10*side;
+      const offZ=-Math.sin(perp)*10*side;
+      const px=cx+offX, pz=cz+offZ;
+      const coneG=new THREE.Group();
+      const cone=new THREE.Mesh(new THREE.ConeGeometry(0.55,1.3,10),coneMat);
+      cone.position.y=0.65; cone.castShadow=true;
+      coneG.add(cone);
+      const base=new THREE.Mesh(new THREE.BoxGeometry(1.2,0.15,1.2),coneBaseMat);
+      base.position.y=0.075;
+      coneG.add(base);
+      coneG.position.set(px,0,pz);
+      mapGroup.add(coneG);
+      collisionCones.push({x:px,z:pz,r:0.8});
+    }
+  }
+}
+
+function buildTrees(positions,leafColor,trunkColor){
+  if(positions.length===0) return;
+  const trunkGeo=new THREE.CylinderGeometry(0.16,0.24,2.2,6);
+  const trunkMat=new THREE.MeshStandardMaterial({color:trunkColor,roughness:1});
+  const leafGeo=new THREE.ConeGeometry(1.55,3.5,7);
+  const leafMat=new THREE.MeshStandardMaterial({color:leafColor,roughness:1});
+  const trunks=new THREE.InstancedMesh(trunkGeo,trunkMat,positions.length);
+  const leaves=new THREE.InstancedMesh(leafGeo,leafMat,positions.length);
+  trunks.castShadow=leaves.castShadow=true;
+  const m=new THREE.Object3D();
+  positions.forEach((p,i)=>{
+    m.position.set(p[0],1.1,p[1]); m.rotation.set(0,0,0); m.scale.set(1,1,1); m.updateMatrix();
+    trunks.setMatrixAt(i,m.matrix);
+    m.position.set(p[0],4.0,p[1]); m.updateMatrix();
+    leaves.setMatrixAt(i,m.matrix);
+  });
+  trunks.instanceMatrix.needsUpdate=true; leaves.instanceMatrix.needsUpdate=true;
+  mapGroup.add(trunks); mapGroup.add(leaves);
+}
+
+function makeWindowTextures(){
+  const S=256;
+  const alb=document.createElement('canvas'); alb.width=alb.height=S;
+  const a=alb.getContext('2d');
+  const emi=document.createElement('canvas'); emi.width=emi.height=S;
+  const e=emi.getContext('2d');
+  a.fillStyle='#141a26'; a.fillRect(0,0,S,S);
+  e.fillStyle='#000000'; e.fillRect(0,0,S,S);
+  const cols=6,rows=6,m=8;
+  const cw=(S-m*2)/cols,ch=(S-m*2)/rows;
+  const rnd=mulberry32(99);
+  for(let i=0;i<cols;i++) for(let j=0;j<rows;j++){
+    const x=m+i*cw+2,y=m+j*ch+2,w=cw-4,h=ch-4;
+    a.fillStyle='#26334a'; a.fillRect(x,y,w,h);
+    a.fillStyle='rgba(140,180,255,0.08)'; a.fillRect(x,y,w,h*0.35);
+    if(rnd()>0.42){
+      const warm=rnd()>0.35;
+      e.fillStyle=warm?'rgba(255,196,110,'+(0.55+rnd()*0.45)+')':'rgba(150,220,255,'+(0.5+rnd()*0.5)+')';
+      e.fillRect(x,y,w,h);
+    }
+  }
+  const t1=new THREE.CanvasTexture(alb); t1.colorSpace=THREE.SRGBColorSpace;
+  const t2=new THREE.CanvasTexture(emi); t2.colorSpace=THREE.SRGBColorSpace;
+  t1.wrapS=t1.wrapT=t2.wrapS=t2.wrapT=THREE.RepeatWrapping;
+  t1.anisotropy=t2.anisotropy=4;
+  return {alb:t1,emi:t2};
+}
+
+function buildingGeo(w,h,d,tile){
+  const g=new THREE.BoxGeometry(w,h,d);
+  const uv=g.attributes.uv;
+  const sc=[[d/tile,h/tile],[d/tile,h/tile],[0.001,0.001],[0.001,0.001],[w/tile,h/tile],[w/tile,h/tile]];
+  for(let f=0;f<6;f++){
+    const su=sc[f][0],sv=sc[f][1];
+    for(let i=0;i<4;i++){
+      const k=f*4+i;
+      uv.setXY(k,uv.getX(k)*su,uv.getY(k)*sv);
+    }
+  }
+  uv.needsUpdate=true;
+  return g;
+}
+
+/* ===== اللاعب ===== */
+const player={
+  x:0,z:-30,angle:0,vx:0,vz:0,
+  carIdx:0,skinIdx:0,
+  score:0,combo:1,driftTimer:0,idleTimer:0,
+  nitro:1,boosting:false,speed:0,side:0,
+  cpIdx:0,lap:0,finished:false,finishTime:0,
+  collisionCooldown:0
+};
+let playerMesh=null;
+let state='menu';
+let gameMode='free'; // 'free' | 'race'
+let botList=[];
+let raceStarted=false;
+let countdownValue=0;
+const TOTAL_LAPS=3;
+const input={up:false,down:false,left:false,right:false,hand:false,boost:false};
+let cameraShake=0;
+
+function createPlayerCar(){
+  if(playerMesh){ scene.remove(playerMesh.group); playerMesh=null; }
+  playerMesh=buildCarMesh(player.carIdx,player.skinIdx);
+  playerMesh.group.position.set(player.x,0,player.z);
+  scene.add(playerMesh.group);
+}
+
+/* ===== الفيزياء ===== */
+function stepCarPhysics(car,ctrl,dt){
+  const st=CARS[car.carIdx];
+  const sinA=Math.sin(car.angle), cosA=Math.cos(car.angle);
+  let fwd=car.vx*sinA+car.vz*cosA;
+  let side=car.vx*cosA-car.vz*sinA;
+
+  const throttle=ctrl.throttle||0, brake=ctrl.brake||0;
+  const steer=ctrl.steer||0, hand=ctrl.hand||false;
+  const wantBoost=ctrl.boost&&car.nitro>0.02&&fwd>1;
+  car.boosting=wantBoost;
+  if(wantBoost) car.nitro=Math.max(0,car.nitro-dt*0.42);
+  else if(car.driftTimer>0.3) car.nitro=Math.min(1,car.nitro+dt*0.30);
+  else car.nitro=Math.min(1,car.nitro+dt*0.11);
+
+  if(throttle) fwd+=st.accel*dt*(wantBoost?2.0:1.0);
+  if(brake) fwd-=(fwd>1?st.accel*1.7:st.accel*0.6)*dt;
+
+  fwd*=Math.pow(0.995,dt*60);
+  if(!throttle&&!brake) fwd*=Math.pow(0.987,dt*60);
+  if(hand) fwd*=Math.pow(0.992,dt*60);
+
+  const maxSpd=st.max*(wantBoost?1.35:1);
+  fwd=clamp(fwd,-st.max*0.30,maxSpd);
+
+  const spdAbs=Math.abs(fwd);
+  const steerRate=st.turn*Math.min(1,spdAbs/11)*(hand?1.5:1);
+  car.angle-=steer*steerRate*dt*(fwd<0?-1:1);
+
+  const gripF=hand?st.drift:st.grip;
+  side*=Math.pow(gripF,dt*60);
+
+  car.vx=fwd*sinA+side*cosA;
+  car.vz=fwd*cosA-side*sinA;
+  car.x+=car.vx*dt;
+  car.z+=car.vz*dt;
+  car.speed=Math.hypot(car.vx,car.vz);
+  car.side=side;
+
+  // حدود العالم
+  const lim=HALF+200;
+  car.x=clamp(car.x,-lim,lim);
+  car.z=clamp(car.z,-lim,lim);
+
+  // تصادم مع الصناديق
+  const r=1.9;
+  for(const b of collisionBoxes){
+    const cx=clamp(car.x,b.minX,b.maxX);
+    const cz=clamp(car.z,b.minZ,b.maxZ);
+    let dx=car.x-cx, dz=car.z-cz;
+    const d2=dx*dx+dz*dz;
+    if(d2<r*r){
+      let d=Math.sqrt(d2);
+      if(d<0.0001){ dx=1; dz=0; d=1; }
+      const nx=dx/d, nz=dz/d;
+      car.x=cx+nx*r; car.z=cz+nz*r;
+      const vn=car.vx*nx+car.vz*nz;
+      if(vn<0){ car.vx-=vn*nx*1.45; car.vz-=vn*nz*1.45; }
+    }
+  }
+
+  // تصادم مع المخاريط
+  for(const c of collisionCones){
+    const dx=car.x-c.x, dz=car.z-c.z;
+    const d=Math.hypot(dx,dz);
+    const minD=r+c.r;
+    if(d<minD && d>0.001){
+      const nx=dx/d, nz=dz/d;
+      car.x=c.x+nx*minD; car.z=c.z+nz*minD;
+      car.vx*=0.7; car.vz*=0.7;
+    }
+  }
+
+  // التفحيط
+  const slipping=Math.abs(side)>4.2 && car.speed>9;
+  if(slipping && (hand||Math.abs(steer)>0)){
+    car.driftTimer+=dt;
+    car.idleTimer=0;
+    car.combo=Math.min(5,1+car.driftTimer*0.55);
+    if(car===player) player.score+=Math.abs(side)*dt*2.4*car.combo;
+  } else {
+    car.idleTimer=(car.idleTimer||0)+dt;
+    if(car.idleTimer>0.9){ car.driftTimer=0; car.combo=1; }
+  }
+}
+
+function updatePlayer(dt){
+  const ctrl={
+    throttle:input.up?1:0,
+    brake:input.down?1:0,
+    steer:(input.right?1:0)-(input.left?1:0),
+    hand:input.hand,
+    boost:input.boost
+  };
+  if(!raceStarted && gameMode==='race') { // لا يمكن الحركة قبل العد التنازلي
+    ctrl.throttle=0; ctrl.brake=0; ctrl.steer=0; ctrl.hand=false; ctrl.boost=false;
+  }
+  stepCarPhysics(player,ctrl,dt);
+}
+
+/* ===== تحديث المظهر ===== */
+let wheelSpin=0;
+function updatePlayerVisual(dt){
+  if(!playerMesh) return;
+  const g=playerMesh.group;
+  g.position.set(player.x,0,player.z);
+  g.rotation.y=player.angle;
+
+  const roll=clamp(-player.side*0.010,-0.13,0.13);
+  playerMesh.body.rotation.z=lerp(playerMesh.body.rotation.z,roll,Math.min(1,dt*8));
+  const accelPitch=(input.up?1:0)*0.035-(input.down?1:0)*0.05;
+  playerMesh.body.rotation.x=lerp(playerMesh.body.rotation.x,accelPitch,Math.min(1,dt*6));
+  // ارتداد تعليق
+  const bob=Math.sin(performance.now()*0.008)*Math.min(player.speed*0.001,0.03);
+  playerMesh.body.position.y=Math.max(0,bob);
+
+  wheelSpin+=player.speed*dt*2.4;
+  const steerAngle=(input.right?1:0)-(input.left?1:0);
+  for(const w of playerMesh.wheels){
+    w.spin.rotation.x=wheelSpin;
+    if(w.front) w.pivot.rotation.y=-steerAngle*0.42;
+  }
+
+  const braking=input.down||input.hand;
+  for(const t of playerMesh.tail) t.material.emissiveIntensity=braking?5.5:2.2;
+
+  // دخان الإطارات
+  if(Math.abs(player.side)>4.2 && player.speed>9){
+    const s=Math.sin(player.angle), c=Math.cos(player.angle);
+    const rx=c, rz=-s;
+    for(const sx of [-0.95,0.95]){
+      const px=player.x+rx*sx-s*1.45;
+      const pz=player.z+rz*sx-c*1.45;
+      if(Math.random()<0.75) spawnSmoke(px,0.25,pz,-player.vx,-player.vz);
+      addSkid(px,pz,player.angle);
+    }
+    // شرر التفحيط
+    if(player.driftTimer>0.3 && Math.random()<0.3){
+      const px=player.x-s*1.8, pz=player.z-c*1.8;
+      spawnSmoke(px,0.3,pz,0,0,[1.0,0.6,0.0],0.5,0.4);
+    }
+  }
+  // لهب الشكمان عند النيترو
+  if(player.boosting){
+    const s=Math.sin(player.angle), c=Math.cos(player.angle);
+    for(const sx of [-0.48,0.48]){
+      const px=player.x+c*sx-s*2.35;
+      const pz=player.z-s*sx-c*2.35;
+      if(Math.random()<0.6) spawnSmoke(px,0.4,pz,-s*6,-c*6,[1.0,0.5,0.1],0.6,0.35);
+    }
+    cameraShake=Math.min(cameraShake+dt*1.5,0.6);
+  }
+
+  cameraShake*=Math.pow(0.90,dt*60);
+}
+
+/* ===== الكاميرا ===== */
+const _v1=new THREE.Vector3(), _v2=new THREE.Vector3(), _v3=new THREE.Vector3();
+function updateCamera(dt){
+  const a=player.angle;
+  const fwd=_v1.set(Math.sin(a),0,Math.cos(a));
+  const spd=player.speed;
+  if(spd>6){
+    _v2.set(player.vx,0,player.vz).normalize();
+    const blend=player.driftTimer>0.25?0.42:0.12;
+    fwd.lerp(_v2,blend).normalize();
+  }
+  const back=9.8+Math.min(spd,60)*0.075;
+  const height=4.3+Math.min(spd,60)*0.022;
+  _v3.set(player.x,0,player.z).addScaledVector(fwd,-back);
+  _v3.y=height;
+  camera.position.lerp(_v3,1-Math.exp(-7.5*dt));
+  if(camera.position.y<1.6) camera.position.y=1.6;
+  _v3.set(player.x,1.35,player.z).addScaledVector(fwd,7.5);
+  camera.lookAt(_v3);
+
+  // اهتزاز
+  if(cameraShake>0.01){
+    camera.position.x+=(Math.random()-0.5)*cameraShake*0.8;
+    camera.position.y+=(Math.random()-0.5)*cameraShake*0.5;
+  }
+
+  const targetFov=63+Math.min(spd,70)*0.34+(player.boosting?7:0);
+  camera.fov+=(targetFov-camera.fov)*Math.min(1,dt*3.5);
+  camera.updateProjectionMatrix();
+}
+
+/* ===== البوتات ===== */
+function spawnBots(){
+  for(const b of botList){ if(b.mesh) scene.remove(b.mesh.group); }
+  botList=[];
+  if(gameMode!=='race') return;
+  const n=5;
+  for(let i=0;i<n;i++){
+    const startWp=trackWaypoints[i%trackWaypoints.length];
+    const carIdx=Math.floor(Math.random()*CARS.length);
+    const skinIdx=Math.floor(Math.random()*SKINS.length);
+    const angle=Math.atan2(trackWaypoints[(i+1)%trackWaypoints.length].x-startWp.x,
+                           trackWaypoints[(i+1)%trackWaypoints.length].z-startWp.z);
+    const off=8+i*3;
+    const bot={
+      x:startWp.x+off, z:startWp.z+off, angle, vx:0, vz:0,
+      carIdx, skinIdx, speed:0, side:0, driftTimer:0, combo:1, idleTimer:0,
+      nitro:1, boosting:false,
+      cpIdx:(i+1)%trackWaypoints.length, lap:0, finished:false,
+      wpOffset: (i%2===0?1:-1) * (4+i*1.5),
+      mesh:null, name:'بوت-'+(i+1),
+      skill:0.85+Math.random()*0.15,
+      stall:0
+    };
+    bot.mesh=buildCarMesh(carIdx,skinIdx);
+    bot.mesh.group.position.set(bot.x,0,bot.z);
+    scene.add(bot.mesh.group);
+    botList.push(bot);
+  }
+}
+
+function updateBot(bot,dt){
+  if(bot.finished){ stepCarPhysics(bot,{throttle:0,brake:1,steer:0,hand:false},dt); }
+  const wp=trackWaypoints[bot.cpIdx];
+  const dx=wp.x-bot.x, dz=wp.z-bot.z;
+  const dist=Math.hypot(dx,dz);
+  if(dist<15){
+    bot.cpIdx=(bot.cpIdx+1)%trackWaypoints.length;
+    if(bot.cpIdx===0) bot.lap++;
+    if(bot.lap>=TOTAL_LAPS && !bot.finished){
+      bot.finished=true;
+      bot.finishTime=performance.now();
+    }
+    return;
+  }
+  const targetAngle=Math.atan2(dx,dz);
+  let diff=targetAngle-bot.angle;
+  while(diff>Math.PI) diff-=Math.PI*2;
+  while(diff<-Math.PI) diff+=Math.PI*2;
+  const steer=-clamp(diff*2.5,-1,1);
+  const aligned=Math.abs(diff)<1.0;
+  const throttle=aligned?bot.skill:0.3;
+  const brake=Math.abs(diff)>2.0?0.5:0;
+  const ctrl={throttle,brake,steer,hand:false,boost:false};
+  stepCarPhysics(bot,ctrl,dt);
+  bot.mesh.group.position.set(bot.x,0,bot.z);
+  bot.mesh.group.rotation.y=bot.angle;
+  bot.mesh.body.rotation.z=clamp(-bot.side*0.01,-0.12,0.12);
+  bot.mesh.wheels.forEach(w=>w.spin.rotation.x+=bot.speed*dt*2.4);
+}
+
+/* ===== نقاط التفتيش ===== */
+function checkCheckpoints(car,isPlayer){
+  const cp=checkpoints[car.cpIdx];
+  if(!cp) return;
+  const d=Math.hypot(car.x-cp.x,car.z-cp.z);
+  if(d<cp.radius){
+    car.cpIdx=(car.cpIdx+1)%checkpoints.length;
+    if(car.cpIdx===0){
+      car.lap++;
+      if(car.lap>=TOTAL_LAPS && !car.finished){
+        car.finished=true;
+        car.finishTime=performance.now();
+        if(isPlayer) onPlayerFinish();
+      }
+    }
+    if(isPlayer){
+      player.score+=250*player.combo;
+      cameraShake=0.3;
+    }
+  }
+}
+
+function onPlayerFinish(){
+  if(gameMode!=='race') return;
+  const pos=computePlayerPosition();
+  const total=botList.length+1+remotePlayers.size;
+  const box=$('finishMsg');
+  $('finishTitle').textContent = pos<=1?'🏆 فوز! المركز الأول':'🏁 انتهى السباق';
+  $('finishSub').textContent = `المركز: ${pos} من ${total} • النقاط: ${Math.floor(player.score)}`;
+  box.style.display='flex';
+}
+
+function computePlayerPosition(){
+  const myProgress = player.lap*checkpoints.length + player.cpIdx + progressToNext(player);
+  let count=0;
+  for(const b of botList){
+    const p=b.lap*checkpoints.length + b.cpIdx + progressToNext(b);
+    if(p>myProgress) count++;
+  }
+  for(const p of remotePlayers.values()){
+    const rp=(p.lap||0)*checkpoints.length+(p.cpIdx||0)+progressToNext(p);
+    if(rp>myProgress) count++;
+  }
+  return count+1;
+}
+function progressToNext(car){
+  const cp=checkpoints[car.cpIdx];
+  if(!cp) return 0;
+  const d=Math.hypot(car.x-cp.x,car.z-cp.z);
+  return Math.max(0,1-d/100);
+}
+
+/* ===== اللاعبون البعيدون ===== */
+const remotePlayers=new Map();
+function ensureRemote(id){
+  let r=remotePlayers.get(id);
+  if(!r){
+    r={mesh:null,carIdx:-1,skinIdx:-1,x:0,z:0,a:0,tx:0,tz:0,ta:0,has:false,last:0,label:null,name:'لاعب',
+       lap:0,cpIdx:0};
+    remotePlayers.set(id,r);
+  }
+  return r;
+}
+function makeLabel(text){
+  const c=document.createElement('canvas'); c.width=256; c.height=64;
+  const g=c.getContext('2d');
+  g.font='bold 34px Tahoma'; g.textAlign='center'; g.textBaseline='middle';
+  g.shadowColor='#000'; g.shadowBlur=8;
+  g.fillStyle='#9fe0ff'; g.fillText(text,128,34);
+  const tex=new THREE.CanvasTexture(c); tex.colorSpace=THREE.SRGBColorSpace;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));
+  sp.scale.set(4.4,1.1,1);
+  sp.position.y=2.7;
+  return sp;
+}
+function setRemoteModel(r,id,name,carIdx,skinIdx){
+  if(r.mesh && r.carIdx===carIdx && r.skinIdx===skinIdx){
+    if(name && r.label) { r.mesh.group.remove(r.label); r.label=makeLabel(name); r.mesh.group.add(r.label); }
+    return;
+  }
+  if(r.mesh){ scene.remove(r.mesh.group); r.mesh=null; }
+  r.carIdx=carIdx; r.skinIdx=skinIdx;
+  if(name) r.name=name;
+  r.mesh=buildCarMesh(carIdx,skinIdx);
+  r.mesh.group.position.set(r.x,0,r.z);
+  r.mesh.group.rotation.y=r.a;
+  if(r.name){
+    r.label=makeLabel(r.name);
+    r.mesh.group.add(r.label);
+  }
+  scene.add(r.mesh.group);
+}
+function updateRemotes(dt){
+  const now=performance.now();
+  for(const [id,r] of remotePlayers){
+    if(!r.mesh) continue;
+    r.x=lerp(r.x,r.tx,Math.min(1,dt*11));
+    r.z=lerp(r.z,r.tz,Math.min(1,dt*11));
+    let da=((r.ta-r.a+Math.PI*3)%(Math.PI*2))-Math.PI;
+    r.a+=da*Math.min(1,dt*11);
+    r.mesh.group.position.set(r.x,0,r.z);
+    r.mesh.group.rotation.y=r.a;
+    if(now-r.last>12000){ scene.remove(r.mesh.group); remotePlayers.delete(id); }
+  }
+}
+
+/* ===== P2P ===== */
+let peer=null, conns=[], hostConn=null, isHost=false, myId=null, roomCode=null, sendTimer=null;
+let myName='هجّال';
+
+function setStatus(t,err){ const s=$('status'); s.textContent=t; s.className=err?'err':''; }
+function makeCode(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<4;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
+function broadcast(msg,except){
+  for(const c of conns){ if(c!==except&&c.open){ try{c.send(msg);}catch(e){} } }
+}
+
+function startHost(){
+  isHost=true; roomCode=makeCode();
+  setStatus('جارٍ إنشاء الغرفة...');
+  peer=new Peer('hgoolahcity-'+roomCode,{debug:0});
+  peer.on('open',()=>{
+    myId='hgoolahcity-'+roomCode;
+    setStatus('✅ الغرفة جاهزة — الكود: '+roomCode);
+    startGame();
+  });
+  peer.on('error',e=>setStatus('خطأ: '+e.type,true));
+  peer.on('connection',conn=>{
+    conns.push(conn);
+    conn.on('open',()=>{
+      conn.send({t:'player',id:myId,name:myName,car:player.carIdx,skin:player.skinIdx});
+      for(const [id,r] of remotePlayers){
+        if(r.has) conn.send({t:'player',id,name:r.name,car:r.carIdx,skin:r.skinIdx});
+      }
+    });
+    conn.on('data',d=>onData(d,conn));
+    conn.on('close',()=>{
+      remotePlayers.delete(conn.peer);
+      broadcast({t:'leave',id:conn.peer});
+      conns=conns.filter(c=>c!==conn);
+    });
+  });
+}
+
+function joinRoom(code){
+  isHost=false; roomCode=code;
+  setStatus('جارٍ الاتصال...');
+  peer=new Peer({debug:0});
+  peer.on('open',id=>{
+    myId=id;
+    hostConn=peer.connect('hgoolahcity-'+code,{reliable:true});
+    hostConn.on('open',()=>{
+      setStatus('✅ تم الاتصال');
+      hostConn.send({t:'hello',name:myName,car:player.carIdx,skin:player.skinIdx});
+      startGame();
+    });
+    hostConn.on('data',d=>onData(d,hostConn));
+    hostConn.on('close',()=>{ remotePlayers.clear(); setStatus('انقطع الاتصال',true); });
+    hostConn.on('error',()=>setStatus('فشل الاتصال',true));
+  });
+  peer.on('error',e=>setStatus('خطأ: '+e.type,true));
+}
+
+function onData(d,conn){
+  if(isHost){
+    if(d.t==='hello'){
+      const r=ensureRemote(conn.peer);
+      setRemoteModel(r,conn.peer,d.name,d.car|0,d.skin|0);
+      r.has=true;
+      broadcast({t:'player',id:conn.peer,name:d.name,car:d.car|0,skin:d.skin|0},conn);
+    } else if(d.t==='state'){
+      const r=ensureRemote(conn.peer);
+      applyState(r,d);
+      broadcast({t:'state',id:conn.peer,x:d.x,z:d.z,a:d.a,car:d.car,skin:d.skin,lap:d.lap,cp:d.cp},conn);
+    }
+  } else {
+    if(d.t==='player'){
+      if(d.id===myId) return;
+      const r=ensureRemote(d.id);
+      setRemoteModel(r,d.id,d.name,d.car|0,d.skin|0);
+      r.has=true;
+    } else if(d.t==='state'){
+      if(d.id===myId) return;
+      const r=ensureRemote(d.id);
+      if(!r.mesh) setRemoteModel(r,d.id,null,d.car|0,d.skin|0);
+      applyState(r,d);
+    } else if(d.t==='leave'){
+      const r=remotePlayers.get(d.id);
+      if(r&&r.mesh) scene.remove(r.mesh.group);
+      remotePlayers.delete(d.id);
+    }
+  }
+}
+function applyState(r,d){
+  r.tx=d.x; r.tz=d.z; r.ta=d.a;
+  if(d.lap!==undefined) r.lap=d.lap;
+  if(d.cp!==undefined) r.cpIdx=d.cp;
+  if(!r.has){ r.x=d.x; r.z=d.z; r.a=d.a; r.has=true; }
+  r.last=performance.now();
+  if(r.mesh && d.car!==undefined && (d.car!==r.carIdx||d.skin!==r.skinIdx)){
+    setRemoteModel(r,null,null,d.car,d.skin);
+  }
+}
+function startNet(){
+  if(sendTimer) clearInterval(sendTimer);
+  if(!isHost && !hostConn) return;
+  sendTimer=setInterval(()=>{
+    const msg={t:'state',
+      x:+player.x.toFixed(2), z:+player.z.toFixed(2), a:+player.angle.toFixed(3),
+      car:player.carIdx, skin:player.skinIdx, lap:player.lap, cp:player.cpIdx};
+    if(isHost) broadcast({...msg,id:myId});
+    else if(hostConn&&hostConn.open) hostConn.send(msg);
+  },50);
+}
+
+/* ===== HUD ===== */
+const mm=$('minimap'), mmc=mm.getContext('2d');
+function drawMinimap(){
+  const S=mm.width, k=S/WORLD;
+  mmc.clearRect(0,0,S,S);
+  mmc.fillStyle='rgba(6,12,22,0.88)'; mmc.fillRect(0,0,S,S);
+  // المسار
+  if(trackWaypoints.length>0){
+    mmc.strokeStyle='rgba(0,229,255,0.55)'; mmc.lineWidth=3;
+    mmc.beginPath();
+    for(let i=0;i<=trackWaypoints.length;i++){
+      const wp=trackWaypoints[i%trackWaypoints.length];
+      const x=S/2+wp.x*k, y=S/2+wp.z*k;
+      if(i===0) mmc.moveTo(x,y); else mmc.lineTo(x,y);
+    }
+    mmc.closePath(); mmc.stroke();
+  }
+  // بوتات
+  for(const b of botList){
+    mmc.fillStyle='#ffaa33';
+    mmc.beginPath(); mmc.arc(S/2+b.x*k,S/2+b.z*k,3.5,0,6.283); mmc.fill();
+  }
+  // لاعبون آخرون
+  for(const r of remotePlayers.values()){
+    mmc.fillStyle='#ff5577';
+    mmc.beginPath(); mmc.arc(S/2+r.x*k,S/2+r.z*k,4,0,6.283); mmc.fill();
+  }
+  // اللاعب
+  const px=S/2+player.x*k, pz=S/2+player.z*k;
+  const dx=Math.sin(player.angle), dz=Math.cos(player.angle);
+  mmc.fillStyle='#00e5ff'; mmc.shadowColor='#00e5ff'; mmc.shadowBlur=12;
+  mmc.beginPath();
+  mmc.moveTo(px+dx*11, pz+dz*11);
+  mmc.lineTo(px-dx*6+dz*7, pz-dz*6-dx*7);
+  mmc.lineTo(px-dx*6-dz*7, pz-dz*6+dx*7);
+  mmc.closePath(); mmc.fill();
+  mmc.shadowBlur=0;
+}
+
+const spdEl=$('spd'), scoreEl=$('score'), comboEl=$('combo'),
+      driftBox=$('driftBox'), nitroBar=$('nitroBar'),
+      lapTxt=$('lapTxt'), posTxt=$('posTxt'), raceBox=$('raceBox');
+function updateHUD(){
+  spdEl.textContent=Math.round(player.speed*3.6);
+  scoreEl.textContent=Math.floor(player.score);
+  comboEl.textContent='هجولة x'+player.combo.toFixed(1);
+  nitroBar.style.width=(player.nitro*100)+'%';
+  driftBox.classList.toggle('active',player.driftTimer>0.25);
+  drawMinimap();
+
+  if(gameMode==='race'){
+    lapTxt.textContent=Math.min(player.lap+1,TOTAL_LAPS)+' / '+TOTAL_LAPS;
+    const pos=computePlayerPosition();
+    const total=botList.length+1+remotePlayers.size;
+    posTxt.textContent='المركز '+pos+'/'+total;
+  }
+}
+
+/* ===== العد التنازلي ===== */
+function startCountdown(){
+  const el=$('countdown');
+  raceStarted=false;
+  countdownValue=3;
+  el.style.display='flex';
+  el.textContent='3';
+  el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  const tick=()=>{
+    countdownValue--;
+    if(countdownValue>0){
+      el.textContent=countdownValue;
+      el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+      setTimeout(tick,1000);
+    } else if(countdownValue===0){
+      el.textContent='انطلق!';
+      el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+      raceStarted=true;
+      setTimeout(()=>{ el.style.display='none'; },700);
+    }
+  };
+  setTimeout(tick,1000);
+}
+
+/* ===== الحلقة الرئيسية ===== */
+let lastT=performance.now();
+function loop(t){
+  requestAnimationFrame(loop);
+  const dt=Math.min(0.045,(t-lastT)/1000);
+  lastT=t;
+
+  if(state==='playing'){
+    updatePlayer(dt);
+    updatePlayerVisual(dt);
+    updateCamera(dt);
+    updateRemotes(dt);
+    updateSmoke(dt);
+
+    for(const b of botList) updateBot(b,dt);
+    if(raceStarted && gameMode==='race'){
+      checkCheckpoints(player,true);
+      for(const b of botList) checkCheckpoints(b,false);
+    }
+
+    // دوران حلقات نقاط التفتيش
+    for(const cp of checkpoints){
+      cp.mesh.rotation.z+=dt*1.5;
+      if(cp===checkpoints[player.cpIdx]){
+        cp.mesh.material.emissiveIntensity=4.0+Math.sin(t*0.008)*1.5;
+      } else {
+        cp.mesh.material.emissiveIntensity=1.5;
+      }
+    }
+
+    sun.position.set(player.x+70,115,player.z+45);
+    sun.target.position.set(player.x,0,player.z);
+    sun.target.updateMatrixWorld();
+    updateHUD();
+  } else {
+    updateMenuCamera(dt);
+    updateRemotes(dt);
+    updateSmoke(dt);
+    for(const b of botList){
+      if(b.mesh){ b.mesh.group.rotation.y+=dt*0.4; }
+    }
+  }
+
+  sky.position.copy(camera.position);
+  composer.render();
+}
+requestAnimationFrame(loop);
+
+/* ===== كاميرا القائمة ===== */
+let menuCamAngle=0;
+function updateMenuCamera(dt){
+  menuCamAngle+=dt*0.14;
+  const R=115;
+  camera.position.set(Math.cos(menuCamAngle)*R, 42+Math.sin(menuCamAngle*0.6)*10, Math.sin(menuCamAngle)*R);
+  camera.lookAt(0,6,0);
+  if(camera.fov!==62){ camera.fov=62; camera.updateProjectionMatrix(); }
+}
+
+/* ===== الإدخال ===== */
+addEventListener('keydown',e=>{
+  if(e.code==='KeyW'||e.code==='ArrowUp') input.up=true;
+  if(e.code==='KeyS'||e.code==='ArrowDown') input.down=true;
+  if(e.code==='KeyA'||e.code==='ArrowLeft') input.left=true;
+  if(e.code==='KeyD'||e.code==='ArrowRight') input.right=true;
+  if(e.code==='Space'){ input.hand=true; e.preventDefault(); }
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight') input.boost=true;
+});
+addEventListener('keyup',e=>{
+  if(e.code==='KeyW'||e.code==='ArrowUp') input.up=false;
+  if(e.code==='KeyS'||e.code==='ArrowDown') input.down=false;
+  if(e.code==='KeyA'||e.code==='ArrowLeft') input.left=false;
+  if(e.code==='KeyD'||e.code==='ArrowRight') input.right=false;
+  if(e.code==='Space') input.hand=false;
+  if(e.code==='ShiftLeft'||e.code==='ShiftRight') input.boost=false;
+});
+function bindTouch(id,key){
+  const el=$(id);
+  const on=e=>{ e.preventDefault(); input[key]=true; };
+  const off=e=>{ e.preventDefault(); input[key]=false; };
+  el.addEventListener('pointerdown',on);
+  el.addEventListener('pointerup',off);
+  el.addEventListener('pointercancel',off);
+  el.addEventListener('pointerleave',off);
+}
+bindTouch('tLeft','left'); bindTouch('tRight','right');
+bindTouch('tUp','up'); bindTouch('tDown','down');
+bindTouch('tHand','hand'); bindTouch('tBoost','boost');
+
+/* ===== معاينة القائمة ===== */
+const pvCanvas=$('preview');
+let pvRenderer=null, pvScene=null, pvCamera=null, pvCar=null, pvAngle=0;
+function initPreview(){
+  pvRenderer=new THREE.WebGLRenderer({canvas:pvCanvas,antialias:true,alpha:true});
+  pvRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  pvRenderer.toneMapping=THREE.ACESFilmicToneMapping;
+  pvRenderer.toneMappingExposure=1.1;
+  pvRenderer.outputColorSpace=THREE.SRGBColorSpace;
+  pvScene=new THREE.Scene();
+  pvCamera=new THREE.PerspectiveCamera(38,1,0.1,100);
+  pvCamera.position.set(6.8,3.9,7.6);
+  pvCamera.lookAt(0,0.85,0);
+  const pvPm=new THREE.PMREMGenerator(pvRenderer);
+  pvScene.environment=pvPm.fromScene(new RoomEnvironment(),0.05).texture;
+  pvScene.add(new THREE.HemisphereLight(0xbfd8ff,0x2a2030,1.5));
+  const key=new THREE.DirectionalLight(0xffffff,2.4); key.position.set(5,10,6); pvScene.add(key);
+  const rim=new THREE.DirectionalLight(0x66ccff,2.6); rim.position.set(-6,4,-7); pvScene.add(rim);
+  const rim2=new THREE.DirectionalLight(0xff2d95,1.6); rim2.position.set(7,2,-5); pvScene.add(rim2);
+  const plat=new THREE.Mesh(new THREE.CylinderGeometry(3.1,3.35,0.28,48),
+    new THREE.MeshStandardMaterial({color:0x0d1526,metalness:0.85,roughness:0.22}));
+  plat.position.y=-0.16; pvScene.add(plat);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(3.25,0.045,8,72),
+    new THREE.MeshStandardMaterial({color:0x00e5ff,emissive:0x00e5ff,emissiveIntensity:2.4}));
+  ring.rotation.x=Math.PI/2; ring.position.y=0.01; pvScene.add(ring);
+  resizePreview(); refreshPreviewCar();
+}
+function refreshPreviewCar(){
+  if(!pvScene) return;
+  if(pvCar){ pvScene.remove(pvCar); pvCar.traverse(o=>{ if(o.geometry) o.geometry.dispose(); }); }
+  pvCar=buildCarMesh(selectedCar,selectedSkin).group;
+  pvScene.add(pvCar);
+}
+function resizePreview(){
+  if(!pvRenderer) return;
+  const w=pvCanvas.clientWidth||300, h=pvCanvas.clientHeight||180;
+  pvRenderer.setSize(w,h,false);
+  pvCamera.aspect=w/h; pvCamera.updateProjectionMatrix();
+}
+let pvLast=performance.now();
+function previewLoop(t){
+  requestAnimationFrame(previewLoop);
+  if(!pvRenderer||state!=='menu') return;
+  const dt=Math.min(0.05,(t-pvLast)/1000); pvLast=t;
+  pvAngle+=dt*0.55;
+  if(pvCar) pvCar.rotation.y=pvAngle;
+  pvRenderer.render(pvScene,pvCamera);
+}
+
+/* ===== القائمة ===== */
+let selectedCar=0, selectedSkin=0, selectedMap=0;
+
+function buildMenuUI(){
+  // الخرائط
+  const mapsEl=$('maps'); mapsEl.innerHTML='';
+  MAPS.forEach((m,i)=>{
+    const b=document.createElement('button');
+    b.className='card';
+    const col='#'+m.sky[1].toString(16).padStart(6,'0');
+    b.innerHTML=`<div class="dot" style="background:${col}"></div>
+      <b>${m.name}</b>
+      <span>${m.waypoints.length} نقاط</span>`;
+    b.onclick=()=>{ selectedMap=i; refreshSel(); loadMap(i); };
+    mapsEl.appendChild(b);
+  });
+  // السيارات
+  const carsEl=$('cars'); carsEl.innerHTML='';
+  CARS.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.className='card';
+    b.innerHTML=`<div class="dot" style="background:#${c.hex.toString(16).padStart(6,'0')}"></div>
+      <b>${c.name}</b>
+      <span>سرعة ${Math.round(c.max*3.6)} • ${['سيدان','كوبيه','عضلي','خارق','شاحن'][c.style]}</span>`;
+    b.onclick=()=>{ selectedCar=i; refreshSel(); refreshPreviewCar(); };
+    carsEl.appendChild(b);
+  });
+  // السكنات
+  const skEl=$('skins'); skEl.innerHTML='';
+  SKINS.forEach((s,i)=>{
+    const d=document.createElement('button');
+    d.className='skin';
+    d.style.background=`linear-gradient(135deg,${s.c1} 0%,${s.c1} 42%,${s.c2} 42%,${s.c2} 100%)`;
+    d.innerHTML=`<i>${s.n}</i>`;
+    d.onclick=()=>{ selectedSkin=i; refreshSel(); refreshPreviewCar(); };
+    skEl.appendChild(d);
+  });
+  refreshSel();
+}
+
+function refreshSel(){
+  [...$('maps').children].forEach((el,i)=>el.classList.toggle('sel',i===selectedMap));
+  [...$('cars').children].forEach((el,i)=>el.classList.toggle('sel',i===selectedCar));
+  [...$('skins').children].forEach((el,i)=>el.classList.toggle('sel',i===selectedSkin));
+  $('modeFree').classList.toggle('sel',gameMode==='free');
+  $('modeRace').classList.toggle('sel',gameMode==='race');
+}
+
+/* ===== بدء / إنهاء ===== */
+function startGame(){
+  myName=($('nameIn').value||'هجّال').trim().slice(0,14)||'هجّال';
+  player.carIdx=selectedCar;
+  player.skinIdx=selectedSkin;
+  player.cpIdx=0; player.lap=0; player.finished=false;
+  player.score=0; player.combo=1; player.driftTimer=0; player.idleTimer=0;
+  player.nitro=1; player.boosting=false;
+  player.vx=0; player.vz=0; player.speed=0;
+
+  // موقع البداية = أول نقطة تفتيش
+  const start=trackWaypoints[0];
+  player.x=start.x+6; player.z=start.z+6;
+  player.angle=Math.atan2(trackWaypoints[1].x-start.x, trackWaypoints[1].z-start.z);
+
+  createPlayerCar();
+  camera.position.set(player.x,5,player.z-42);
+  camera.fov=64; camera.updateProjectionMatrix();
+
+  // إخفاء القائمة
+  state='playing';
+  $('menu').classList.add('hidden');
+  $('hud').classList.remove('hidden');
+  if('ontouchstart' in window) $('touch').classList.remove('hidden');
+
+  // سباق
+  if(gameMode==='race'){
+    raceBox.style.display='block';
+    player.finished=false;
+    spawnBots();
+    startCountdown();
+  } else {
+    raceBox.style.display='none';
+    raceStarted=true;
+  }
+
+  if(isHost||hostConn){
+    $('roomInfo').classList.remove('hidden');
+    $('roomInfo').innerHTML = isHost
+      ? 'غرفة <b>'+roomCode+'</b><br><small>شارك الكود</small>'
+      : 'متصل بغرفة <b>'+roomCode+'</b>';
+    startNet();
+  }
+}
+
+function exitGame(){
+  state='menu';
+  $('menu').classList.remove('hidden');
+  $('hud').classList.add('hidden');
+  $('touch').classList.add('hidden');
+  $('roomInfo').classList.add('hidden');
+  $('finishMsg').style.display='none';
+  $('countdown').style.display='none';
+  for(const r of remotePlayers.values()) if(r.mesh) scene.remove(r.mesh.group);
+  remotePlayers.clear();
+  for(const b of botList) if(b.mesh) scene.remove(b.mesh.group);
+  botList=[];
+  if(sendTimer){ clearInterval(sendTimer); sendTimer=null; }
+  if(peer){ try{peer.destroy();}catch(e){} peer=null; }
+  conns=[]; hostConn=null; isHost=false; myId=null; roomCode=null;
+  setStatus('');
+  pvLast=performance.now();
+}
+
+/* ===== الأزرار ===== */
+$('modeFree').onclick=()=>{ gameMode='free'; refreshSel(); };
+$('modeRace').onclick=()=>{ gameMode='race'; refreshSel(); };
+$('btnSolo').onclick=()=>{ isHost=false; hostConn=null; startGame(); };
+$('btnHost').onclick=()=>{ startHost(); };
+$('btnJoin').onclick=()=>{
+  const code=($('codeIn').value||'').trim().toUpperCase();
+  if(code.length!==4){ setStatus('اكتب كود من 4 أحرف',true); return; }
+  joinRoom(code);
+};
+$('btnExit').onclick=exitGame;
+
+/* ===== التحجيم ===== */
+function onResize(){
+  const w=innerWidth,h=innerHeight;
+  renderer.setSize(w,h);
+  composer.setSize(w,h);
+  bloom.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+  resizePreview();
+}
+addEventListener('resize',onResize);
+
+/* ===== إقلاع ===== */
+loadMap(0);
+buildMenuUI();
+initPreview();
+requestAnimationFrame(previewLoop);
+onResize();
+</script>
+</body>
+</html>
